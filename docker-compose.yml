@@ -1,0 +1,63 @@
+services:
+  nestjs:
+    build:
+      context: .
+    container_name: nestjs-app
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongodb1:27017,mongodb2:27017/solarkita-dev?replicaSet=rs0
+      - RABBITMQ_URI=amqp://user:password@rabbitmq:5672
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=3000
+      - JWT_SECRET=$3CReT!
+    depends_on:
+      - mongodb1
+      - mongodb2
+      - rabbitmq
+      - redis
+
+  mongodb1:
+    image: mongo:latest
+    container_name: mongodb1
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongodb_data1:/data/db
+    environment:
+      MONGO_REPLICA_SET_NAME: rs0
+    command: ["mongod", "--replSet", "rs0"]
+
+  mongodb2:
+    image: mongo:latest
+    container_name: mongodb2
+    ports:
+      - '27019:27017'
+    volumes:
+      - mongodb_data2:/data/db
+    command: ["mongod", "--replSet", "rs0"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672' # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - '6379:6379'
+
+volumes:
+  mongodb_data1:
+  mongodb_data2:
