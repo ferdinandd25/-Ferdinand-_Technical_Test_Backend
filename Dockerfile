@@ -1,19 +1,10 @@
-FROM node:16.13-slim
-
-# Install dependencies
-WORKDIR /app
-COPY package*.json ./
-
-# Install global dependencies for bcrypt
-RUN apt-get update && apt-get install -y procps python3 make g++ && rm -rf /var/lib/apt/lists/*
-
-RUN npm install
-
-# Install the NestJS CLI globally
-RUN npm install -g @nestjs/cli
-
-# Copy source files
+FROM node:lts-alpine
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
+RUN npm install --production --silent && mv node_modules ../
 COPY . .
-
 EXPOSE 3000
-CMD ["npm", "run", "start:dev"]
+RUN chown -R node /usr/src/app
+USER node
+CMD ["npm", "start"]
